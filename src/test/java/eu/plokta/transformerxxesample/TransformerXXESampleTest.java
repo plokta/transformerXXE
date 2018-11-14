@@ -50,7 +50,26 @@ public class TransformerXXESampleTest {
         String result = writer.toString();
         assertFalse(result, result.contains("XXE"));
     }
-    
+
+    // "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl" (which is
+    // the default TF afaik) does indeed restrict external stylesheet access
+    // when FEATURE_SECURE_PROCESSING is set. expect an exception here
+    @Test(expected = java.lang.Exception.class)
+    public void testInternalTransformer() throws TransformerException {
+        StringWriter writer = new StringWriter();
+        Result res = new StreamResult(writer);
+        TransformerXXESample txs = new TransformerXXESample();
+        Transformer transformer = txs.getTransformer("com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl", true, null, null);
+        assertNotNull(transformer);
+
+        // throws:
+        // 'java.lang.Exception: Could not read stylesheet target 'extStylesheet.xsl',
+        // because 'https' access is not allowed due to restriction set by the accessExternalStylesheet property.'
+        transformer.transform(src, res);
+        String result = writer.toString();
+        assertFalse(result, result.contains("XXE"));
+    }
+
     @Test
     public void testClasspathTransformer() throws TransformerException {
         StringWriter writer = new StringWriter();
